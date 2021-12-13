@@ -1,20 +1,20 @@
-import 'package:laravel_echo/src/channel/pusher-channel.dart';
 import 'package:laravel_echo/src/channel/presence-channel.dart';
+import 'package:laravel_echo/src/channel/push_user.dart';
+import 'package:laravel_echo/src/channel/pusher-channel.dart';
 
 ///
 /// This class represents a Pusher presence channel.
 ///
 class PusherPresenceChannel extends PusherChannel implements PresenceChannel {
-  PusherPresenceChannel(
-    dynamic pusher,
-    String name,
-    dynamic options,
-  ) : super(pusher, name, options);
+  PusherPresenceChannel(pusher, String name, options)
+      : super(pusher, name, options);
 
   /// Register a callback to be called anytime the member list changes.
   @override
   PusherPresenceChannel here(Function callback) {
-    this.on('pusher:subscription_succeeded', (data) => callback(data));
+    this.on('pusher:subscription_succeeded', (data) {
+      callback((data as List).map((e) => PusherUser.fromJson(e)).toList());
+    });
 
     return this;
   }
@@ -22,7 +22,7 @@ class PusherPresenceChannel extends PusherChannel implements PresenceChannel {
   /// Listen for someone joining the channel.
   @override
   PusherPresenceChannel joining(Function callback) {
-    this.on('pusher:member_added', (data) => callback(data));
+    this.on('pusher:member_added', (member) => callback(member.info));
 
     return this;
   }
@@ -30,7 +30,7 @@ class PusherPresenceChannel extends PusherChannel implements PresenceChannel {
   /// Listen for someone leaving the channel.
   @override
   PusherPresenceChannel leaving(Function callback) {
-    this.on('pusher:member_removed', (data) => callback(data));
+    this.on('pusher:member_removed', (member) => callback(member.info));
 
     return this;
   }
